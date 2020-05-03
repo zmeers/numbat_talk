@@ -19,6 +19,7 @@ options(htmltools.dir.version = FALSE)
 library(tidyverse)
 library(ussc)
 library(flipbookr)
+library(ggparliament)
 
 knitr::opts_chunk$set(fig.dim=c(4.8, 4.5), fig.retina = 2, out.width="90%")
 knitr::opts_hooks$set(fig.callout = function(options) {
@@ -150,7 +151,7 @@ election_data %>%
 ## Visualising legislatures with **ggparliament**
 
 ```{r ggparliament_au, include = FALSE, fig.callout=TRUE}
-australia <- election_data %>%
+australia <- ggparliament::election_data %>%
   filter(country == "Australia" &
     house == "Representatives" &
     year == 2016) 
@@ -181,6 +182,7 @@ ggparliament::parliament_data(
        ) +
   coord_cartesian(clip = "off")
 ```
+
 ---
 ## Visualising legislatures with **ggparliament**
 
@@ -246,8 +248,7 @@ uk %>%
   ggparliament::theme_ggparliament(
     background_colour = TRUE) +
   labs(colour = "Parties", 
-       title = "UK House of Commons",
-       subtitle = "The goverment sits to the Speaker's right"
+       title = "UK House of Commons"
        ) +
   coord_flip()
 ```
