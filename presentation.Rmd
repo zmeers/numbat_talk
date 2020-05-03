@@ -1,0 +1,363 @@
+---
+title: "Data visualisation:"
+subtitle: "A bridge between politics, society, and statistics"
+author: "Zoe Meers"
+institute: "United States Studies Centre, University of Sydney"
+date: "4 May 2020"
+output:
+  xaringan::moon_reader:
+    css: ["default", "ninjutsu",  "metropolis-fonts"]
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+```{r setup, include=FALSE}
+options(htmltools.dir.version = FALSE)
+library(tidyverse)
+library(ussc)
+library(flipbookr)
+
+knitr::opts_chunk$set(fig.dim=c(4.8, 4.5), fig.retina = 2, out.width="90%")
+knitr::opts_hooks$set(fig.callout = function(options) {
+  if (options$fig.callout) {
+    options$echo <- FALSE
+    options$out.height <- "70%"
+    options$fig.width <- 8
+    options$fig.height <- 6.75
+  }
+  options
+})
+```
+
+class: inverse, left, middle
+
+* Election forecasting
+
+* Data journalism
+
+* Political data visualisation in **R**
+
+* Data analytics in think tanks
+
+---
+# Election forecasting: FiveThirtyEight
+
+<iframe width="1280" height="600" src="https://projects.fivethirtyeight.com/2020-primary-forecast/" frameborder="0" allowfullscreen></iframe>
+
+---
+## Election forecasting: FiveThirtyEight
+
+* Rolling poll averages over time
+
+* Probabilistic forecasts during an election campaign
+
+* Compelling, interactive displays of polls which are data points for the predictive model
+
+---
+class: inverse, center, middle
+
+We've come a long way from this:
+
+**"There are three kinds of lies: lies, damned lies, and statistics."** 
+-[Author unknown, via Mark Twain in *Chapters from My Autobiography (1907)*]
+
+
+---
+## Data journalism
+
+* Not unique to FiveThirtyEight
+
+* Data journalism teams exist in most major newsrooms globally, including the New York Times, the Washington Post, the Financial Times, the Guardian, and so on
+
+* In Australia the most prolific newsroom data viz teams are at the ABC and Guardian Australia
+
+* Interactive JavaScript-based web pages - scrolly telling, **d3.js** - are key 
+
+* **R** and/or **Python** are used for the data analysis stage, rarely for the final product (except for the BBC!)
+
+
+---
+class: inverse, center, middle
+
+But you *can* create beautiful production-ready graphs in **R** as well!
+
+---
+## Visualising political data in **R**
+
+* Some useful packages for politics & data are:
+  * **fivethirtyeight**, **politicaldata**, **ggparliament**
+
+* **ggparliament** is an R package for visualising the physical shape of legislatures
+
+* It is a **ggplot2** extension
+
+
+---
+## Visualising legislatures with **ggparliament**
+
+```{r, include = FALSE}
+election_data <- ggparliament::election_data %>% 
+  add_row(year = 2018, country = "USA", house = "Representatives", party_long = "Republican", party_short = "GOP", seats = 199, government = 0, colour = "#E81B23", .after = 6) %>% 
+  add_row(year = 2018, country = "USA", house = "Representatives", party_long = "Democratic", party_short = "Dem", seats = 235, government = 1, colour = "#E81B23", .after = 7)
+```
+
+```{r ggparliament, include = FALSE, fig.callout=TRUE}
+election_data %>%
+  filter(country == "USA" &
+    house == "Representatives")  %>% 
+  group_split(year) %>% 
+  map_dfr(
+    ~ggparliament::parliament_data(.,
+      party_seats = .$seats,
+      parl_rows = 10,
+      type = "semicircle")
+    ) %>% 
+  select(-c(country,
+            house,
+            party_long,
+            seats)
+         ) %>% 
+  ggplot(aes(x, y)) +
+  facet_wrap(~year, nrow = 2) +
+  ggparliament::theme_ggparliament() + 
+  ggparliament::geom_parliament_seats(
+    size = 1,
+    aes(colour = party_short)
+    ) + 
+  theme(legend.position = 'bottom') +
+  ggparliament::geom_highlight_government(
+    government == 1,
+    size = 1.1,
+    colour = "grey"
+    ) + 
+  labs(colour = NULL, 
+       title = "American Congress",
+       subtitle = "The party that has control of Congress is highlighted in grey."
+       ) +
+  scale_colour_manual(values = c("#E81B23","#3333FF"), 
+                      limits = c("GOP", "Dem"))
+```
+
+---
+## Visualising legislatures with **ggparliament**
+
+`r chunk_reveal("ggparliament", break_type = "auto")`
+
+---
+## Visualising legislatures with **ggparliament**
+
+```{r ggparliament_au, include = FALSE, fig.callout=TRUE}
+australia <- election_data %>%
+  filter(country == "Australia" &
+    house == "Representatives" &
+    year == 2016) 
+
+ggparliament::parliament_data(
+  election_data = australia,
+    party_seats = australia$seats,
+    parl_rows = 4,
+    type = "horseshoe") %>% 
+  ggplot(aes(x, y)) +
+  ggparliament::theme_ggparliament() + 
+  ggparliament::geom_parliament_seats(
+    aes(colour = party_short)
+    ) + 
+  scale_colour_manual(values = australia$colour, 
+                      limits = australia$party_short) +
+  theme(legend.position = 'none') +
+  ggparliament::draw_partylabels(
+                   type = "horseshoe", 
+                   party_names = party_short,
+                   party_seats = seats, 
+                   party_colours = colour) +
+  ggparliament::draw_totalseats(
+                   n = 150,
+                   type = "horseshoe") +
+  labs(colour = NULL, 
+       title = "Australian House of Representatives, 2016 election"
+       ) +
+  coord_cartesian(clip = "off")
+```
+---
+## Visualising legislatures with **ggparliament**
+
+`r chunk_reveal("ggparliament_au", break_type = "auto")`
+
+---
+## Visualising legislatures with **ggparliament**
+
+
+```{r, include = FALSE}
+uk <- election_data %>%
+  filter(country == "UK") %>% 
+  mutate(party_short = case_when(
+    party_short == "Con" ~ "Tories",
+    TRUE ~ party_short
+  ),
+    party_short = fct_other(party_short,
+                                 keep = c(
+                                   "Lab",
+                                   "SNP",
+                                   "LibDem",
+                                   "Tories",
+                                   "DUP"
+                                 )),
+  colour = case_when(
+           party_short == "Other" ~ "grey",
+           TRUE ~ colour)
+           ) %>% 
+  select(-party_long) %>% 
+  group_by(year, party_short, colour, government) %>% 
+  tally(seats, name = "seats") %>% 
+  ungroup() 
+
+uk_2019 <- tribble(
+  ~year, ~party_short, ~colour, ~seats, ~government, 
+  2019, "Lab", "#DC241F", 203, 0,
+  2019, "SNP", "#FEF987", 48, 0,
+  2019, "Tories", "#0087DC", 365, 1,
+  2019, "LibDem", "#FAA61A", 11, 0,
+  2019, "DUP", "#D46A4C", 8, 0,
+  2019, "Other", "grey", 15, 0
+)
+
+uk <- bind_rows(uk, uk_2019)
+```
+
+
+```{r ggparliament_uk, include = FALSE, fig.callout=TRUE}
+uk %>%
+  group_split(year) %>%
+  map_dfr(~ggparliament::parliament_data(
+    election_data = .,
+    party_seats = .$seats,
+    group = .$government,
+    type = "opposing_benches")) %>%
+  ggplot(aes(x, y)) +
+  ggparliament::geom_parliament_seats(
+    size = 1,
+    aes(colour = party_short)) +  
+  facet_wrap(~year, ncol = 2) + 
+  scale_color_manual(values = uk$colour, 
+                     limits = uk$party_short) +
+  ggparliament::theme_ggparliament(
+    background_colour = TRUE) +
+  labs(colour = "Parties", 
+       title = "UK House of Commons",
+       subtitle = "The goverment sits to the Speaker's right"
+       ) +
+  coord_flip()
+```
+
+---
+## Visualising legislatures with **ggparliament**
+
+`r chunk_reveal("ggparliament_uk", break_type = "auto")`
+
+
+---
+## Data analytics in think tanks
+
+* Data-driven policy wonks
+
+* Urban Institue, Pew, Brookings, CSIS
+
+* USSC, Grattan, Lowy
+
+* Communicating for a general audience
+
+---
+## Data analytics in think tanks
+
+* Key things to keep in mind in the think tank world:
+  
+  * Simple, facts-based viz
+
+  * Make any data analysis easy to peruse
+
+  * Consider guiding the reader and pointing out what they should be looking at 
+
+---
+## Data analytics in think tanks
+
+* Create a common workplace-wide **ggplot2** theme, wrap it up into a package
+
+* Have extensive documentation and guides for data visualisation and analysis pipelines
+
+* Remember your audience
+
+---
+## Data analytics in think tanks
+
+* Mobile-friendly graphs in **R**
+
+* SVG/PNG/PDF
+
+* When knitting an RMD file to a HTML page and you want graphs that are responsive to a changing browser size, set `out.width` and `out.height` instead of `fig.width` and `fig.height`
+
+* This is particularly important when dealing with HTML widgets that do not scale well
+
+* A quick hack is to copy and paste this into your chunk options: `dev = 'svg', out.width = "100%", out.extra='style="position:absolute; padding:10px; display: inline-block;"'`
+
+* Other HTML arguments can be passed to `out-extra`.
+
+---
+## Data analytics in think tanks
+
+* Some R Markdown tips for "interactive" content 
+
+  * The use of `{.tabset}`, ` {.tabset .tabset-pills}`, and `{.tabset .tabset-dropdown}` in headers
+  
+  * Switching between graphs
+  
+  * Gives the impression of redrawing axes -- easy in **JavaScript**, hard in **R** (with the exception of Shiny)
+  
+---
+<iframe width="1280" height="600" src="https://www.ussc.edu.au/analysis/australia-and-the-united-states-by-the-numbers" frameborder="0" allowfullscreen></iframe>
+
+
+---
+## Data analytics in think tanks
+
+* Mathematical knowledge is comparatively less useful
+
+* What matters is being able to draw out insights that are relevant for public policy
+
+* Some combination of tools (**R**, **Python**), statistical knowledge, and substantive domain knowledge
+
+---
+## Data analytics in think tanks
+
+* The ability to code and do data analytics is very useful for think tanks
+
+* Rigorous analysis, consideration of missing information, uncertainty
+
+* Quantify what works and what does not
+
+---
+## Communicating with data
+
+* New skill set for traditionally qualitative domains
+
+* Requires more education around statistics in the social sciences
+
+* Particularly necessary in journalism 
+
+---
+## Communicating with data
+
+* Why does basic numeracy and data literacy matter?
+
+* Quantifying social phenomena is very important when it comes to things like public opinion, budgets, election campaigns, support for policy initiatives, and other events such as pandemics...
+
+* Avoid the trap of people misusing statistics for their gain - i.e. to prove their point even if the evidence says otherwise. 
+
+* Data visualisation helps -- takes complicated information and simplifies presentation.
+
+
+
+
+
