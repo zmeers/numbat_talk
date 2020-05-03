@@ -273,7 +273,7 @@ uk %>%
 ---
 ## Data analytics in think tanks
 
-* Key things to keep in mind in the think tank world:
+* Key things to keep in mind for data analytics the think tank world:
   
   * Simple, facts-based viz
 
