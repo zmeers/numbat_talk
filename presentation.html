@@ -43,11 +43,11 @@ class: inverse, left, middle
 ---
 ## Election forecasting: FiveThirtyEight
 
-* Rolling poll averages over time
+* Poll aggregation and probabilistic forecasts during an election campaign
 
-* Probabilistic forecasts during an election campaign
+* Short term forecasting versus long term electoral system and voting behaviour research
 
-* Compelling, interactive displays of polls which are data points for the predictive model
+* Compelling, interactive displays of data
 
 ---
 class: inverse, center, middle
@@ -69,7 +69,7 @@ We've come a long way from this:
 
 * Interactive JavaScript-based web pages - scrolly telling, **d3.js** - are key 
 
-* **R** and/or **Python** are used for the data analysis stage, rarely for the final product (except for the BBC!)
+* **R** and/or **Python** are used for the data analysis stage, rarely for the final product
 
 
 ---
@@ -11467,13 +11467,16 @@ uk %&gt;%
 ---
 ## Data analytics in think tanks
 
-* Key things to keep in mind for data analytics the think tank world:
+* Key things to keep in mind for data analytics in think tanks:
   
   * Simple, facts-based viz
 
   * Make any data analysis easy to peruse
 
   * Consider guiding the reader and pointing out what they should be looking at 
+      * Scrolly telling
+      * Highlights
+      * Strategic annotations
 
 ---
 ## Data analytics in think tanks
@@ -11494,8 +11497,6 @@ uk %&gt;%
 * When knitting an RMD file to a HTML page and you want graphs that are responsive to a changing browser size, set `out.width` and `out.height` instead of `fig.width` and `fig.height`
 
 * This is particularly important when dealing with HTML widgets that do not scale well
-
-* A quick hack is to copy and paste this into your chunk options: `dev = 'svg', out.width = "100%", out.extra='style="position:absolute; padding:10px; display: inline-block;"'`
 
 * Other HTML arguments can be passed to `out-extra`.
 
@@ -11544,11 +11545,9 @@ uk %&gt;%
 ---
 ## Communicating with data
 
-* Why does basic numeracy and data literacy matter?
-
 * Quantifying social phenomena is very important when it comes to things like public opinion, budgets, election campaigns, support for policy initiatives, and other events such as pandemics...
 
-* Avoid the trap of people misusing statistics for their gain - i.e. to prove their point even if the evidence says otherwise. 
+* Avoid the trap of people misusing statistics 
 
 * Data visualisation helps -- takes complicated information and simplifies presentation.
 
